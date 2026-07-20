@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BMI+ · Real Health Context</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0d1117;
+      color: #c9d1d9;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #f0f6fc;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+    .subtitle {
+      color: #8b949e;
+      text-align: center;
+      margin-bottom: 34px;
+      font-size: 0.95rem;
+      max-width: 480px;
+    }
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 28px;
+      width: 100%;
+      max-width: 520px;
+      margin-bottom: 24px;
+    }
+    label {
+      display: block;
+      font-size: 0.83rem;
+      color: #8b949e;
+      margin-bottom: 6px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+    }
+    .field { margin-bottom: 18px; }
+    select, input[type="number"] {
+      width: 100%;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      color: #c9d1d9;
+      font-size: 0.95rem;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    select:focus, input[type="number"]:focus { border-color: #58a6ff; }
+    .row { display: flex; gap: 14px; }
+    .row .field { flex: 1; }
+    .unit-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .unit-btn {
+      flex: 1;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+      background: #0d1117;
+      color: #8b949e;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .unit-btn.active {
+      background: #1f6feb;
+      border-color: #1f6feb;
+      color: #fff;
+      font-weight: 600;
+    }
+    button.calc-btn {
+      width: 100%;
+      background: #1f6feb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button.calc-btn:hover { background: #388bfd; }
+
+    /* Result */
+    #result { display: none; }
+    .bmi-hero {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .bmi-number {
+      font-size: 3.8rem;
+      font-weight: 800;
+      line-height: 1;
+      color: #f0f6fc;
+    }
+    .bmi-category {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .underweight { color: #58a6ff; }
+    .normal { color: #3fb950; }
+    .overweight { color: #d29922; }
+    .obese1 { color: #f0883e; }
+    .obese2 { color: #f85149; }
+
+    /* Scale bar */
+    .scale-wrap {
+      margin: 20px 0;
+    }
+    .scale-bar {
+      height: 12px;
+      border-radius: 99px;
+      background: linear-gradient(to right, #58a6ff 0%, #3fb950 20%, #d29922 45%, #f0883e 65%, #f85149 100%);
+      position: relative;
+      margin-bottom: 8px;
+    }
+    .scale-marker {
+      position: absolute;
+      top: -4px;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 20px;
+      background: #fff;
+      border-radius: 2px;
+    }
+    .scale-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: #6e7681;
+    }
+
+    /* Metric cards */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 18px 0;
+    }
+    .metric-box {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .metric-val { font-size: 1.15rem; font-weight: 700; color: #f0f6fc; }
+    .metric-lbl { font-size: 0.75rem; color: #8b949e; margin-top: 3px; }
+    .metric-note { font-size: 0.72rem; color: #6e7681; margin-top: 3px; }
+
+    /* Context section */
+    .context-section {
+      border-top: 1px solid #21262d;
+      padding-top: 16px;
+      margin-top: 4px;
+    }
+    .context-section h3 {
+      font-size: 0.81rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #8b949e;
+      margin-bottom: 12px;
+    }
+    .context-item {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 9px;
+      font-size: 0.91rem;
+      align-items: flex-start;
+    }
+    .ctx-icon { flex-shrink: 0; font-size: 1rem; line-height: 1.45; }
+    .ctx-text { color: #c9d1d9; line-height: 1.5; }
+    .ctx-sub { color: #8b949e; font-size: 0.82rem; }
+
+    /* Limitation banner */
+    .limit-box {
+      background: #1c1f26;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-top: 16px;
+      font-size: 0.83rem;
+      color: #8b949e;
+      line-height: 1.5;
+    }
+    .limit-box strong { color: #c9d1d9; }
+
+    .reset-btn {
+      margin-top: 16px;
+      width: 100%;
+      background: #21262d;
+      color: #c9d1d9;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      padding: 10px;
+      cursor: pointer;
+    }
+    .reset-btn:hover { background: #30363d; }
+    footer {
+      color: #484f58;
+      font-size: 0.77rem;
+      margin-top: 12px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<h1>📊 BMI+</h1>
+<p class="subtitle">BMI is just a number. This gives you the actual health context your doctor should've explained.</p>
+
+<div class="card" id="form-card">
+  <div class="unit-toggle">
+    <button class="unit-btn active" id="btn-metric" onclick="setUnit('metric')">Metric (kg / cm)</button>
+    <button class="unit-btn" id="btn-imperial" onclick="setUnit('imperial')">Imperial (lb / ft·in)</button>
+  </div>
+
+  <!-- Metric inputs -->
+  <div id="inputs-metric">
+    <div class="row">
+      <div class="field">
+        <label>Weight (kg)</label>
+        <input type="number" id="weight_kg" min="20" max="300" placeholder="e.g. 75" />
+      </div>
+      <div class="field">
+        <label>Height (cm)</label>
+        <input type="number" id="height_cm" min="100" max="250" placeholder="e.g. 175" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Imperial inputs -->
+  <div id="inputs-imperial" style="display:none">
+    <div class="row">
+      <div class="field">
+        <label>Weight (lbs)</label>
+        <input type="number" id="weight_lb" min="50" max="700" placeholder="e.g. 165" />
+      </div>
+      <div class="field">
+        <label>Height (ft)</label>
+        <input type="number" id="height_ft" min="3" max="8" placeholder="e.g. 5" />
+      </div>
+      <div class="field">
+        <label>Height (in)</label>
+        <input type="number" id="height_in" min="0" max="11" placeholder="e.g. 9" />
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label>Age</label>
+      <input type="number" id="age" min="18" max="100" placeholder="e.g. 32" />
+    </div>
+    <div class="field">
+      <label>Biological sex</label>
+      <select id="sex">
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Waist circumference (optional, improves accuracy)</label>
+    <div class="row">
+      <div class="field" style="margin-bottom:0">
+        <input type="number" id="waist_cm" min="40" max="200" placeholder="cm (e.g. 88)" />
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <input type="number" id="waist_in" min="15" max="80" placeholder="inches (e.g. 35)" />
+      </div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Activity level</label>
+    <select id="activity">
+      <option value="sedentary">Sedentary (desk job, little exercise)</option>
+      <option value="light">Light (exercise 1-2x/week)</option>
+      <option value="moderate" selected>Moderate (exercise 3-4x/week)</option>
+      <option value="active">Active (hard exercise 5+x/week)</option>
+      <option value="very_active">Very active (athlete / physical job)</option>
+    </select>
+  </div>
+
+  <button class="calc-btn" onclick="calculate()">Calculate →</button>
+</div>
+
+<div class="card" id="result">
+  <div class="bmi-hero">
+    <div class="bmi-number" id="bmi-num"></div>
+    <div class="bmi-category" id="bmi-cat"></div>
+  </div>
+
+  <div class="scale-wrap">
+    <div class="scale-bar"><div class="scale-marker" id="scale-marker"></div></div>
+    <div class="scale-labels">
+      <span>16 (Underweight)</span>
+      <span>18.5</span>
+      <span>25</span>
+      <span>30</span>
+      <span>35+</span>
+    </div>
+  </div>
+
+  <div class="metrics-grid" id="metrics-grid"></div>
+
+  <div class="context-section" id="context-section">
+    <h3>What this actually means for you</h3>
+    <div id="context-items"></div>
+  </div>
+
+  <div class="limit-box">
+    <strong>BMI's known blind spots:</strong> It can't tell muscle from fat, ignores where fat sits on your body (waist-to-hip ratio matters more), and is less accurate for older adults, athletes, and certain ethnic groups (Asian populations have higher risk at lower BMI thresholds). Use this as a starting point, not a verdict.
+  </div>
+
+  <button class="reset-btn" onclick="reset()">← Recalculate</button>
+</div>
+
+<footer>No data stored. Runs entirely in your browser. Not medical advice.</footer>
+
+<script>
+let unit = 'metric';
+
+function setUnit(u) {
+  unit = u;
+  document.getElementById('inputs-metric').style.display = u === 'metric' ? 'block' : 'none';
+  document.getElementById('inputs-imperial').style.display = u === 'imperial' ? 'block' : 'none';
+  document.getElementById('btn-metric').className = 'unit-btn' + (u === 'metric' ? ' active' : '');
+  document.getElementById('btn-imperial').className = 'unit-btn' + (u === 'imperial' ? ' active' : '');
+}
+
+function calculate() {
+  let weightKg, heightCm;
+
+  if (unit === 'metric') {
+    weightKg = parseFloat(document.getElementById('weight_kg').value);
+    heightCm = parseFloat(document.getElementById('height_cm').value);
+    if (isNaN(weightKg) || isNaN(heightCm)) { alert('Please enter weight and height.'); return; }
+  } else {
+    const lb = parseFloat(document.getElementById('weight_lb').value);
+    const ft = parseFloat(document.getElementById('height_ft').value) || 0;
+    const inches = parseFloat(document.getElementById('height_in').value) || 0;
+    if (isNaN(lb) || (ft === 0 && inches === 0)) { alert('Please enter weight and height.'); return; }
+    weightKg = lb * 0.453592;
+    heightCm = (ft * 12 + inches) * 2.54;
+  }
+
+  const age = parseFloat(document.getElementById('age').value);
+  const sex = document.getElementById('sex').value;
+  const activity = document.getElementById('activity').value;
+  const waistCmRaw = parseFloat(document.getElementById('waist_cm').value);
+  const waistInRaw = parseFloat(document.getElementById('waist_in').value);
+
+  if (isNaN(age) || age < 18) { alert('Please enter a valid age (18+).'); return; }
+
+  const heightM = heightCm / 100;
+  const bmi = weightKg / (heightM * heightM);
+
+  // Waist: cm takes priority, then inches, then skip
+  let waistCm = null;
+  if (!isNaN(waistCmRaw) && waistCmRaw > 0) waistCm = waistCmRaw;
+  else if (!isNaN(waistInRaw) && waistInRaw > 0) waistCm = waistInRaw * 2.54;
+
+  // BMI category
+  let cat, catClass;
+  if (bmi < 18.5) { cat = 'Underweight'; catClass = 'underweight'; }
+  else if (bmi < 25) { cat = 'Normal weight'; catClass = 'normal'; }
+  else if (bmi < 30) { cat = 'Overweight'; catClass = 'overweight'; }
+  else if (bmi < 35) { cat = 'Obese (Class I)'; catClass = 'obese1'; }
+  else { cat = 'Obese (Class II+)'; catClass = 'obese2'; }
+
+  // Scale marker position — map BMI 16–36 to 0–100%
+  const markerPct = Math.min(100, Math.max(0, ((bmi - 16) / (36 - 16)) * 100));
+
+  // BMR — Mifflin-St Jeor
+  let bmr;
+  if (sex === 'male') bmr = 10 * weightKg + 6.25 * heightCm - 5 * age + 5;
+  else bmr = 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
+
+  const activityFactors = { sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725, very_active: 1.9 };
+  const tdee = Math.round(bmr * activityFactors[activity]);
+
+  // Ideal weight range (BMI 18.5–24.9)
+  const idealLow = Math.round(18.5 * heightM * heightM);
+  const idealHigh = Math.round(24.9 * heightM * heightM);
+  const idealLowLb = Math.round(idealLow * 2.205);
+  const idealHighLb = Math.round(idealHigh * 2.205);
+
+  // Weight to lose/gain to reach normal range
+  const weightKgRounded = Math.round(weightKg * 10) / 10;
+  let weightDiff = null;
+  if (bmi < 18.5) weightDiff = { action: 'gain', kg: Math.round((idealLow - weightKg) * 10) / 10 };
+  else if (bmi >= 25) weightDiff = { action: 'lose', kg: Math.round((weightKg - idealHigh) * 10) / 10 };
+
+  // Waist risk assessment
+  let waistRisk = null;
+  if (waistCm) {
+    if (sex === 'male') waistRisk = waistCm >= 102 ? 'high' : waistCm >= 94 ? 'elevated' : 'normal';
+    else waistRisk = waistCm >= 88 ? 'high' : waistCm >= 80 ? 'elevated' : 'normal';
+  }
+
+  // ponderal index (Rohrer's index) — better than BMI for tall/short people
+  const pi = (weightKg / (heightM ** 3)).toFixed(1);
+
+  // Body fat estimate (Deurenberg formula)
+  const bfPct = Math.round((1.2 * bmi) + (0.23 * age) - (10.8 * (sex === 'male' ? 1 : 0)) - 5.4);
+
+  // Render
+  document.getElementById('bmi-num').textContent = bmi.toFixed(1);
+  const catEl = document.getElementById('bmi-cat');
+  catEl.textContent = cat;
+  catEl.className = `bmi-category ${catClass}`;
+  document.getElementById('scale-marker').style.left = markerPct + '%';
+
+  // Metrics grid
+  const wDiffStr = weightDiff
+    ? `${weightDiff.action === 'lose' ? '−' : '+'}${weightDiff.kg} kg / ${Math.round(weightDiff.kg * 2.205)} lb to reach normal`
+    : 'You\'re in the normal BMI range';
+
+  document.getElementById('metrics-grid').innerHTML = `
+    <div class="metric-box">
+      <div class="metric-val">${tdee.toLocaleString()} cal</div>
+      <div class="metric-lbl">Daily energy (TDEE)</div>
+      <div class="metric-note">Calories to maintain current weight</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-val">~${bfPct}%</div>
+      <div class="metric-lbl">Est. body fat %</div>
+      <div class="metric-note">Deurenberg formula (±5% accuracy)</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-val">${idealLow}–${idealHigh} kg</div>
+      <div class="metric-lbl">Healthy weight range</div>
+      <div class="metric-note">${idealLowLb}–${idealHighLb} lbs for your height</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-val">${pi}</div>
+      <div class="metric-lbl">Ponderal Index</div>
+      <div class="metric-note">Better for very tall/short people (norm: 11–15)</div>
+    </div>
+  `;
+
+  // Context items
+  const items = [];
+
+  // Age-adjusted BMI context
+  if (age >= 65) {
+    items.push({ icon: '👴', text: 'At 65+, BMI 25–27 is actually associated with lower mortality — the "normal" range shifts slightly upward for older adults.', sub: 'Source: NEJM meta-analysis' });
+  }
+  if (sex === 'female' && bmi >= 25 && bmi < 30) {
+    items.push({ icon: '⚠️', text: 'For women, overweight BMI is less predictive of cardiovascular risk than waist circumference. Getting your waist measured gives more signal.', sub: '' });
+  }
+
+  // Body fat context
+  const bfNorm = sex === 'male'
+    ? { low: 6, fit: 14, avg: 24, obese: 32 }
+    : { low: 16, fit: 21, avg: 32, obese: 40 };
+  if (bfPct < bfNorm.fit) {
+    items.push({ icon: '💪', text: `Your estimated body fat (~${bfPct}%) is in the athletic range — you may weigh more than BMI "expects" due to muscle mass.`, sub: '' });
+  } else if (bfPct > bfNorm.obese) {
+    items.push({ icon: '❗', text: `Your estimated body fat (~${bfPct}%) suggests metabolically significant adiposity even if BMI looks borderline.`, sub: 'Consider a DEXA scan for accurate measurement.' });
+  }
+
+  // Waist risk
+  if (waistRisk === 'high') {
+    items.push({ icon: '🔴', text: `Waist ${Math.round(waistCm)} cm — this is above the ${sex === 'male' ? '102 cm (40 in)' : '88 cm (35 in)'} high-risk threshold. Abdominal fat is strongly linked to metabolic syndrome and heart disease.`, sub: 'This is a more predictive risk marker than BMI alone.' });
+  } else if (waistRisk === 'elevated') {
+    items.push({ icon: '🟡', text: `Waist ${Math.round(waistCm)} cm — in the elevated risk zone for your sex. Central fat accumulation raises insulin resistance and cardiovascular risk independently of total weight.`, sub: '' });
+  } else if (waistRisk === 'normal') {
+    items.push({ icon: '🟢', text: `Waist ${Math.round(waistCm)} cm — within normal range for your sex. Healthy waist size reduces cardiometabolic risk significantly.`, sub: '' });
+  } else {
+    items.push({ icon: '📏', text: 'Add your waist measurement for a much better picture of metabolic risk — it\'s a stronger predictor than BMI for heart disease and diabetes.', sub: '' });
+  }
+
+  // TDEE context
+  if (activity === 'sedentary') {
+    items.push({ icon: '🪑', text: `At sedentary activity, your TDEE is ${tdee.toLocaleString()} cal/day. Adding just 20 min of walking daily shifts you to "light active" and raises maintenance calories by ~150 — giving you more dietary flexibility.`, sub: '' });
+  }
+
+  // Weight diff
+  if (weightDiff) {
+    const weeklyTarget = 0.5; // kg/week
+    const weeksToGoal = Math.round(weightDiff.kg / weeklyTarget);
+    items.push({ icon: '🎯', text: `To reach the healthy range: ${weightDiff.action} ${weightDiff.kg} kg (${Math.round(weightDiff.kg * 2.205)} lbs). At 0.5 kg/week — a sustainable, evidence-based pace — that's about ${weeksToGoal} weeks.`, sub: 'A 500 cal/day deficit reliably produces ~0.5 kg/week loss.' });
+  } else {
+    items.push({ icon: '✅', text: `You're within the normal BMI range. Maintaining current weight is your goal — focus on diet quality and activity consistency, not the number.`, sub: '' });
+  }
+
+  document.getElementById('context-items').innerHTML = items.map(i =>
+    `<div class="context-item"><span class="ctx-icon">${i.icon}</span><span class="ctx-text">${i.text}${i.sub ? `<br><span class="ctx-sub">${i.sub}</span>` : ''}</span></div>`
+  ).join('');
+
+  document.getElementById('form-card').style.display = 'none';
+  document.getElementById('result').style.display = 'block';
+}
+
+function reset() {
+  document.getElementById('form-card').style.display = 'block';
+  document.getElementById('result').style.display = 'none';
+}
+</script>
+</body>
+</html>
