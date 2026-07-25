@@ -502,7 +502,7 @@
 
             <div class="form-group">
                 <label>Waist (optional, cm)</label>
-                <input type="number" id="waist" placeholder="For body fat estimate">
+                <input type="number" id="waist" placeholder="For cardiovascular risk check">
             </div>
 
             <button class="btn" id="calculate-btn">Calculate BMI+</button>
@@ -603,16 +603,11 @@
             }
             const tdee = bmr * activity;
 
-            // Body fat (Navy method if waist provided)
-            let bodyFat = null;
-            if (waist > 0) {
-                if (sex === 'male') {
-                    bodyFat = 495 / (1.0324 - 0.19077 * Math.log10(waist - 0) + 0.15456 * Math.log10(heightCm)) - 450;
-                } else {
-                    bodyFat = 495 / (1.29579 - 0.35004 * Math.log10(waist + 0) + 0.22100 * Math.log10(heightCm)) - 450;
-                }
-                bodyFat = Math.max(5, Math.min(50, bodyFat));
-            }
+            // Body fat — Deurenberg formula (BMI + age + sex, always available)
+            // %BF = 1.20 × BMI + 0.23 × age − 10.8 × sex(1=male) − 5.4
+            const sexFactor = sex === 'male' ? 1 : 0;
+            let bodyFat = 1.20 * bmi + 0.23 * age - 10.8 * sexFactor - 5.4;
+            bodyFat = Math.max(5, Math.min(60, bodyFat));
 
             // Healthy weight range (BMI 18.5-24.9)
             const minWeight = 18.5 * heightM * heightM;
@@ -672,6 +667,20 @@
             const insights = [];
             insights.push(`Your body burns ~${Math.round(tdee)} calories daily at your activity level`);
             insights.push(`To lose 0.5kg/week, target ~${Math.round(tdee - 500)} calories daily`);
+
+            // Weight-to-goal and weeks (feature promised in README, now delivered)
+            if (bmi < 18.5) {
+                const kgToGain = minWeight - weightKg;
+                const weeksToGoal = Math.ceil(kgToGain / 0.25); // 0.25 kg/week safe gain
+                const dispDelta = unit === 'metric' ? `${kgToGain.toFixed(1)} kg` : `${(kgToGain * 2.205).toFixed(1)} lbs`;
+                insights.push(`Gain ${dispDelta} to reach healthy range — ~${weeksToGoal} weeks at a safe pace (0.25 kg/week)`);
+            } else if (bmi >= 25) {
+                const targetWeight = bmi < 30 ? minWeight + (maxWeight - minWeight) * 0.5 : maxWeight;
+                const kgToLose = weightKg - targetWeight;
+                const weeksToGoal = Math.ceil(kgToLose / 0.5); // 0.5 kg/week sustainable
+                const dispDelta = unit === 'metric' ? `${kgToLose.toFixed(1)} kg` : `${(kgToLose * 2.205).toFixed(1)} lbs`;
+                insights.push(`Lose ${dispDelta} to reach healthy range — ~${weeksToGoal} weeks at a sustainable pace (0.5 kg/week)`);
+            }
 
             if (bodyFat !== null) {
                 if (sex === 'male') {
