@@ -1,3 +1,15 @@
+<div align="center">
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=180&section=header&text=BMI-PLUS&fontSize=42&fontColor=fff&animation=twinkling&fontAlignY=32&desc=BMI%20with%20the%20context%20your%20doctor%20skipped&descAlignY=55&descSize=16"/>
+
+[![Live Demo](https://img.shields.io/badge/▶_Live_Demo-Visit_Now-6366f1?style=for-the-badge&logoColor=white)](https://bmi-plus.vercel.app)
+[![GitHub Stars](https://img.shields.io/github/stars/trinathone/bmi-plus?style=for-the-badge&color=f59e0b)](https://github.com/trinathone/bmi-plus)
+[![License](https://img.shields.io/badge/license-MIT-22c55e?style=for-the-badge)](LICENSE)
+
+</div>
+
+---
+
 # BMI+
 
 Your doctor told you your BMI is 27.4. You nodded and left not knowing what to do with that.
