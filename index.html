@@ -532,6 +532,10 @@
                     <div class="metric-label">Healthy Weight</div>
                     <div class="metric-value"><span id="healthy-range">—</span></div>
                 </div>
+                <div class="metric-card" id="whtr-card" style="display:none">
+                    <div class="metric-label">Waist-to-Height</div>
+                    <div class="metric-value"><span id="whtr-value">—</span> <span class="metric-unit" id="whtr-risk"></span></div>
+                </div>
             </div>
 
             <div class="info-section">
@@ -735,6 +739,39 @@
                 if (waistCm > waistRisk) {
                     insights.push('⚠️ Waist circumference indicates elevated cardiovascular risk');
                 }
+
+                // Waist-to-Height Ratio (WHtR) — stronger cardiometabolic predictor than BMI
+                const whtr = waistCm / heightCm;
+                const whtrEl = document.getElementById('whtr-value');
+                const whtrRiskEl = document.getElementById('whtr-risk');
+                whtrEl.textContent = whtr.toFixed(2);
+                document.getElementById('whtr-card').style.display = '';
+
+                let whtrRiskText, whtrColor;
+                if (whtr < 0.4) {
+                    whtrRiskText = 'Underweight';
+                    whtrColor = '#8b5cf6';
+                } else if (whtr < 0.5) {
+                    whtrRiskText = 'Healthy';
+                    whtrColor = '#22c55e';
+                } else if (whtr < 0.6) {
+                    whtrRiskText = 'Overweight';
+                    whtrColor = '#f59e0b';
+                } else {
+                    whtrRiskText = 'High Risk';
+                    whtrColor = '#ef4444';
+                }
+                whtrRiskEl.textContent = whtrRiskText;
+                whtrRiskEl.style.color = whtrColor;
+                whtrEl.style.color = whtrColor;
+
+                if (whtr >= 0.5) {
+                    insights.push(`WHtR of ${whtr.toFixed(2)} exceeds 0.5 — your waist is more than half your height, a strong predictor of cardiometabolic risk independent of BMI`);
+                } else {
+                    insights.push(`WHtR of ${whtr.toFixed(2)} is in the healthy range (keep waist below half your height)`);
+                }
+            } else {
+                document.getElementById('whtr-card').style.display = 'none';
             }
 
             document.getElementById('insights').innerHTML = insights.map(i => `
