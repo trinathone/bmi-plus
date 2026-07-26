@@ -501,7 +501,7 @@
             </div>
 
             <div class="form-group">
-                <label>Waist (optional, cm)</label>
+                <label id="waist-label">Waist (optional, cm)</label>
                 <input type="number" id="waist" placeholder="For cardiovascular risk check">
             </div>
 
@@ -562,10 +562,26 @@
 
                 document.getElementById('metric-inputs').style.display = unit === 'metric' ? 'block' : 'none';
                 document.getElementById('imperial-inputs').style.display = unit === 'imperial' ? 'block' : 'none';
+
+                // Update waist label and placeholder to match selected unit
+                const waistLabel = document.getElementById('waist-label');
+                const waistInput = document.getElementById('waist');
+                if (unit === 'imperial') {
+                    waistLabel.textContent = 'Waist (optional, inches)';
+                    waistInput.placeholder = 'For cardiovascular risk check';
+                } else {
+                    waistLabel.textContent = 'Waist (optional, cm)';
+                    waistInput.placeholder = 'For cardiovascular risk check';
+                }
             });
         });
 
         document.getElementById('calculate-btn').addEventListener('click', calculate);
+
+        // Allow Enter key to trigger calculation from any input
+        document.querySelectorAll('input, select').forEach(el => {
+            el.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
+        });
 
         function calculate() {
             let heightCm, weightKg;
@@ -697,8 +713,10 @@
             }
 
             if (waist > 0) {
+                // Normalize waist to cm for threshold comparison (input is inches in imperial mode)
+                const waistCm = unit === 'imperial' ? waist * 2.54 : waist;
                 const waistRisk = sex === 'male' ? 102 : 88;
-                if (waist > waistRisk) {
+                if (waistCm > waistRisk) {
                     insights.push('⚠️ Waist circumference indicates elevated cardiovascular risk');
                 }
             }
