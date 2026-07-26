@@ -679,10 +679,26 @@
             const displayMax = unit === 'metric' ? maxWeight : maxWeight * 2.205;
             document.getElementById('healthy-range').innerHTML = `${Math.round(displayMin)}-${Math.round(displayMax)} <span class="metric-unit">${weightUnit}</span>`;
 
+            // Ponderal Index (Rohrer's Index) — better for very tall/short people
+            // PI = weight(kg) / height(m)^3; normal range ~11–15 kg/m³
+            const pi = weightKg / (heightM * heightM * heightM);
+            const piContext = [];
+            if (bmi >= 25 && pi < 15) {
+                piContext.push('Your Ponderal Index is in the normal range — tall people are systematically over-penalized by BMI; your weight-to-height ratio is actually fine.');
+            } else if (bmi < 18.5 && pi > 11) {
+                piContext.push('Your Ponderal Index is normal despite low BMI — short stature can push BMI down artificially.');
+            }
+
             // Insights
             const insights = [];
             insights.push(`Your body burns ~${Math.round(tdee)} calories daily at your activity level`);
-            insights.push(`To lose 0.5kg/week, target ~${Math.round(tdee - 500)} calories daily`);
+            // Only suggest deficit for people who are overweight/obese
+            if (bmi >= 25) {
+                insights.push(`To lose 0.5kg/week, target ~${Math.round(tdee - 500)} calories daily`);
+            } else if (bmi < 18.5) {
+                insights.push(`To gain 0.25kg/week, target ~${Math.round(tdee + 250)} calories daily`);
+            }
+            piContext.forEach(c => insights.push(c));
 
             // Weight-to-goal and weeks (feature promised in README, now delivered)
             if (bmi < 18.5) {
